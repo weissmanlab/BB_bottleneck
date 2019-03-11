@@ -1,16 +1,10 @@
-#  Put the long lists of donor and recipient frequencies in seperate text files that we then read from.  Same goes for n_variants and var_calling_threshold.
-# First we read in the relevant files and set the parameters of the code
-n_variants_dummy <- read.table("n_variants.txt")
-n_variants <-  n_variants_dummy[1, 1]
-# We read in and then save the number of variants
-var_calling_threshold_dummy  <- read.table("var_calling_threshold.txt")
-var_calling_threshold  <-  var_calling_threshold_dummy[1, 1]
-# We read in and then save the variant calling threshold
+#########################################################
 donor_freqs_observed <- read.table("donor_freqs.txt")
 # We read in and save the list of donor frequencies
-recipient_total_reads <- matrix( 0, n_variants, 1)
-# We read in and save the list of recipient frequencies
 recipient_freqs_observed <- read.table("recipient_freqs.txt")
+# We read in and save the list of recipient frequencies
+n_variants <- nrow(donor_freqs_observed) # number of variants 
+var_calling_threshold  <-  .03
 Nb_min <- 1
 # Minimum bottleneck size we consider. 
 Nb_max <- 200
