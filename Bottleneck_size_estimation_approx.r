@@ -1,10 +1,18 @@
 #########################################################
-donor_freqs_observed <- read.table("donor_freqs.txt")
+#install.packages("argparse")
+library(argparse)
+args <- commandArgs(trailingOnly = TRUE)
+if (length(args)!=3) {
+  print(length(args))
+  stop("Three input arguments are required - list of donor frequencies, list of recipient frequencies and variant calling threshold", call.=FALSE)
+}
+
+donor_freqs_observed <- read.table(args[1])
 # We read in and save the list of donor frequencies
-recipient_freqs_observed <- read.table("recipient_freqs.txt")
+recipient_freqs_observed <- read.table(args[2])#read.table("recipient_freqs.txt")
 # We read in and save the list of recipient frequencies
 n_variants <- nrow(donor_freqs_observed) # number of variants 
-var_calling_threshold  <-  .03
+var_calling_threshold  <- as.double(args[3])
 Nb_min <- 1
 # Minimum bottleneck size we consider. 
 Nb_max <- 200

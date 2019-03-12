@@ -1,10 +1,19 @@
 # This code requires use of the R package rmutil 
 library(rmutil)
-var_calling_threshold  <-  .03 #var_calling_threshold_dummy[1, 1] 
-donor_freqs_observed <- read.table("donor_freqs.txt")
+library(argparse)
+args <- commandArgs(trailingOnly = TRUE)
+if (length(args)!=4) {
+  print(length(args))
+  stop("Four input arguments are required - list of donor frequencies, list of recipient total reads and list of recipient variant reads, variant calling threshold", call.=FALSE)
+}
+
+#var_calling_threshold_table  <-  read.table(args[4]) #var_calling_threshold_dummy[1, 1] 
+
+donor_freqs_observed <- read.table(args[1])
 n_variants <- nrow(donor_freqs_observed)
-recipient_total_reads <- read.table("recipient_total_reads.txt")
-recipient_var_reads_observed <- read.table("recipient_var_reads.txt")
+recipient_total_reads <- read.table(args[2])
+recipient_var_reads_observed <- read.table(args[3])
+var_calling_threshold  <- as.double(args[4])
 Nb_min <- 1
 Nb_max <- 200
 num_NB_values <- Nb_max -Nb_min + 1
