@@ -2,9 +2,9 @@
 #install.packages("argparse")
 library(argparse)
 args <- commandArgs(trailingOnly = TRUE)
-if (length(args)!=3) {
+if (length(args)!=5) {
   print(length(args))
-  stop("Three input arguments are required - list of donor frequencies, list of recipient frequencies and variant calling threshold", call.=FALSE)
+  stop("Five input arguments are required - list of donor frequencies, list of recipient frequencies, variant calling threshold, minimum bottleneck size, maximum bottleneck size", call.=FALSE)
 }
 
 donor_freqs_observed <- read.table(args[1])
@@ -13,9 +13,9 @@ recipient_freqs_observed <- read.table(args[2])#read.table("recipient_freqs.txt"
 # We read in and save the list of recipient frequencies
 n_variants <- nrow(donor_freqs_observed) # number of variants 
 var_calling_threshold  <- as.double(args[3])
-Nb_min <- 1
+Nb_min <- as.integer(args[4])#1
 # Minimum bottleneck size we consider. 
-Nb_max <- 200
+Nb_max <- as.integer(args[5])
 # Maximum bottleneck size we consider.
 ############################################################.  LOAD IN DATA AND DECLARE ARRAYS TO BE FILLED
 num_NB_values <- Nb_max -Nb_min + 1

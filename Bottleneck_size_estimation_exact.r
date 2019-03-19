@@ -2,9 +2,9 @@
 library(rmutil)
 library(argparse)
 args <- commandArgs(trailingOnly = TRUE)
-if (length(args)!=4) {
+if (length(args)!=6) {
   print(length(args))
-  stop("Four input arguments are required - list of donor frequencies, list of recipient total reads and list of recipient variant reads, variant calling threshold", call.=FALSE)
+  stop("Six input arguments are required - list of donor frequencies, list of recipient total reads, list of recipient variant reads, variant calling threshold, minimum bottleneck size, maximum bottleneck size", call.=FALSE)
 }
 
 #var_calling_threshold_table  <-  read.table(args[4]) #var_calling_threshold_dummy[1, 1] 
@@ -14,8 +14,8 @@ n_variants <- nrow(donor_freqs_observed)
 recipient_total_reads <- read.table(args[2])
 recipient_var_reads_observed <- read.table(args[3])
 var_calling_threshold  <- as.double(args[4])
-Nb_min <- 1
-Nb_max <- 200
+Nb_min <-  as.integer(args[5])
+Nb_max <- as.integer(args[6])
 num_NB_values <- Nb_max -Nb_min + 1
 likelihood_matrix <- matrix( 0, n_variants, num_NB_values)
 log_likelihood_matrix <- matrix( 0, n_variants, num_NB_values)
