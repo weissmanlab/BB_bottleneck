@@ -1,6 +1,6 @@
 Transmission Bottleneck Estimator
 
-This is the implementation of transmission bottleneck estimation method based on beta-binomial sampling described in "Transmission Bottleneck Size Estimation from Pathogen Deep-Sequencing Data, with an Application to Human Influenza A Virus".
+This is the implementation of the transmission bottleneck estimation method based on beta-binomial sampling described in "Transmission Bottleneck Size Estimation from Pathogen Deep-Sequencing Data, with an Application to Human Influenza A Virus".
 
 Requirements
 R 3.5.2+
