@@ -88,6 +88,8 @@ if(  (log_likelihood_function[CI_index_upper] - CI_height) > 0  ){CI_index_upper
 		  	##########################
 ##############################################################################################  ABOVE THIS LINE DETERMINES PEAK LOG LIKELIHOOD AND CONFIDENCE INTERVALS
  # Npw we plot the result
+
+pdf(file="approx_plot.pdf")
 plot(log_likelihood_function)
 abline(v = max_log_likelihood, col="black" )  # Draws a verticle line at Nb value for which log likelihood is maximized
 abline(v = CI_index_lower, col="green" ) # confidence intervals
@@ -98,3 +100,4 @@ print("confidence interval left bound")
 print(CI_index_lower)
 print("confidence interval right bound")
 print(CI_index_upper)
+dev.off()
