@@ -21,7 +21,7 @@ The command line arguments are list of donor variant frequencies, list of recipi
 
 For the exact code run
 
-Rscript --vanilla Bottleneck_size_estimation_exact.r "example_data/donor_freqs_recip_freqs_and_reads.txt" "example_data/recipient_total_reads.txt" "example_data/recipient_var_reads.txt" TRUE 0.03 1 200
+Rscript --vanilla Bottleneck_size_estimation_exact.r "example_data/donor_freqs_recip_freqs_and_reads.txt" TRUE 0.03 1 200
 
 The command line arguments are list of donor variant frequencies, list of recipient total reads, recipient variant reads, variant calling threshold, minimum bottleneck size, and maximum bottleneck size.
 
