@@ -2,20 +2,26 @@
 library(rmutil)
 library(argparse)
 args <- commandArgs(trailingOnly = TRUE)
-if (length(args)!=6) {
+if (length(args)!=5) {
   print(length(args))
-  stop("Six input arguments are required - list of donor frequencies, list of recipient total reads, list of recipient variant reads, variant calling threshold, minimum bottleneck size, maximum bottleneck size", call.=FALSE)
+  stop("Five input arguments are required - file with lists of donor frequencies and recipient frequencies and reads, TRUE or FALSE (determines if pdf plot is produced), variant calling threshold, minimum bottleneck size, maximum bottleneck size", call.=FALSE)
 }
 
 #var_calling_threshold_table  <-  read.table(args[4]) #var_calling_threshold_dummy[1, 1] 
 
+donor_freqs_recip_freqs_and_reads_observed <- read.table(args[1])
 donor_freqs_observed <- read.table(args[1])
-n_variants <- nrow(donor_freqs_observed)
-recipient_total_reads <- read.table(args[2])
-recipient_var_reads_observed <- read.table(args[3])
-var_calling_threshold  <- as.double(args[4])
-Nb_min <-  as.integer(args[5])
-Nb_max <- as.integer(args[6])
+
+donor_freqs_observed <- as.data.frame(donor_freqs_observed[,1])
+
+n_variants <- nrow(donor_freqs_recip_freqs_and_reads_observed)
+#print(n_variants)
+recipient_total_reads <- as.data.frame(donor_freqs_recip_freqs_and_reads_observed [,3]) #read.table(args[2])
+recipient_var_reads_observed <- as.data.frame(donor_freqs_recip_freqs_and_reads_observed [,4])#read.table(args[3])
+plot_bool  <- eval(args[2])
+var_calling_threshold  <- as.double(args[3])
+Nb_min <-  as.integer(args[4])
+Nb_max <- as.integer(args[5])
 num_NB_values <- Nb_max -Nb_min + 1
 likelihood_matrix <- matrix( 0, n_variants, num_NB_values)
 log_likelihood_matrix <- matrix( 0, n_variants, num_NB_values)
@@ -98,7 +104,8 @@ if(  (log_likelihood_function[CI_index_upper] - CI_height) > 0  ){CI_index_upper
 		  	##########################
 ##############################################################################################  ABOVE THIS LINE DETERMINES PEAK LOG LIKELIHOOD AND CONFIDENCE INTERVALS
  # Npw we plot the result
-pdf(file="exact_plot.pdf")
+if(plot_bool == TRUE)
+{pdf(file="exact_plot.pdf")
 plot(log_likelihood_function)
 abline(v = max_log_likelihood, col="black" )  # Draws a verticle line at Nb value for which log likelihood is maximized
 abline(v = CI_index_lower, col="green" ) # confidence intervals
@@ -110,3 +117,4 @@ print(CI_index_lower)
 print("confidence interval right bound")
 print(CI_index_upper)
 dev.off()
+}

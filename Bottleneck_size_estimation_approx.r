@@ -4,15 +4,24 @@ library(argparse)
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args)!=5) {
   print(length(args))
-  stop("Five input arguments are required - list of donor frequencies, list of recipient frequencies, variant calling threshold, minimum bottleneck size, maximum bottleneck size", call.=FALSE)
+  stop("Five input arguments are required - file with lists of donor and recipient frequencies, TRUE or FALSE (determines if pdf plot is produced), variant calling threshold, minimum bottleneck size, maximum bottleneck size", call.=FALSE)
 }
 
-donor_freqs_observed <- read.table(args[1])
+
+donor_and_recip_freqs_observed <- read.table(args[1])
+#donor_freqs_observed <- read.table(args[1])
+donor_freqs_observed <- as.data.frame(donor_and_recip_freqs_observed[, 1])
+#print(donor_freqs_observed)
+
 # We read in and save the list of donor frequencies
-recipient_freqs_observed <- read.table(args[2])#read.table("recipient_freqs.txt")
+recipient_freqs_observed <- as.data.frame(donor_and_recip_freqs_observed[, 2]) #read.table(args[2])#read.table("recipient_freqs.txt")
 # We read in and save the list of recipient frequencies
-n_variants <- nrow(donor_freqs_observed) # number of variants 
+n_variants <- nrow(donor_and_recip_freqs_observed)#nrow(donor_freqs_observed) # number of variants 
+#print(n_variants)
+plot_bool  <- eval(args[2])
+
 var_calling_threshold  <- as.double(args[3])
+
 Nb_min <- as.integer(args[4])#1
 # Minimum bottleneck size we consider. 
 Nb_max <- as.integer(args[5])
@@ -88,8 +97,8 @@ if(  (log_likelihood_function[CI_index_upper] - CI_height) > 0  ){CI_index_upper
 		  	##########################
 ##############################################################################################  ABOVE THIS LINE DETERMINES PEAK LOG LIKELIHOOD AND CONFIDENCE INTERVALS
  # Npw we plot the result
-
-pdf(file="approx_plot.pdf")
+if(plot_bool == TRUE)
+{pdf(file="approx_plot.pdf")
 plot(log_likelihood_function)
 abline(v = max_log_likelihood, col="black" )  # Draws a verticle line at Nb value for which log likelihood is maximized
 abline(v = CI_index_lower, col="green" ) # confidence intervals
@@ -101,3 +110,4 @@ print(CI_index_lower)
 print("confidence interval right bound")
 print(CI_index_upper)
 dev.off()
+}
