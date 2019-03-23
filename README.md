@@ -1,18 +1,18 @@
-Transmission Bottleneck Estimator
+# BB Bottleneck Estimator
+## Description
+This is the implementation of the transmission bottleneck estimation method based on beta-binomial sampling described in [Transmission Bottleneck Size Estimation from Pathogen Deep-Sequencing Data, with an Application to Human Influenza A Virus](https://www.biorxiv.org/content/10.1101/101790v1).
 
-This is the implementation of the transmission bottleneck estimation method based on beta-binomial sampling described in "Transmission Bottleneck Size Estimation from Pathogen Deep-Sequencing Data, with an Application to Human Influenza A Virus".
-
-Requirements
-R 3.5.2+
-rmutil 
-argparse
-mdatools
-Rscript
+## Requirements
+- R 3.5.2+
+- rmutil
+- argparse
+- mdatools
+- Rscript
 
 Be sure to add the Rscript path to your environment variables or include the path when calling Rscript from the command line.  
 
 
-Example:
+## Examples
 
 For the approximate code run
 
@@ -26,6 +26,7 @@ Rscript --vanilla Bottleneck_size_estimation_exact.r "example_data/donor_freqs_r
 
 The command line arguments are file with lists of donor frequencies and recipient frequencies and reads,  TRUE or FALSE (determines if pdf plot is produced), variant calling threshold, minimum bottleneck size, maximum bottleneck size and confidence level.
 
-
-The codes will output plots in pdf format called "approx_plot.pdf" and "exact_plot.pdf".
-
+## Output
+- Bottleneck Estimate
+- Bounds of Confidence Interval
+- Plots in pdf format (optional)
