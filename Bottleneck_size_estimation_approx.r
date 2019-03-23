@@ -1,10 +1,11 @@
 #########################################################
 #install.packages("argparse")
 library(argparse)
+library(mdatools)
 args <- commandArgs(trailingOnly = TRUE)
-if (length(args)!=5) {
+if (length(args)!=6) {
   print(length(args))
-  stop("Five input arguments are required - file with lists of donor and recipient frequencies, TRUE or FALSE (determines if pdf plot is produced), variant calling threshold, minimum bottleneck size, maximum bottleneck size", call.=FALSE)
+  stop("Six input arguments are required - file with lists of donor and recipient frequencies, TRUE or FALSE (determines if pdf plot is produced), variant calling threshold, minimum bottleneck size, maximum bottleneck size, confidence level.", call.=FALSE)
 }
 
 
@@ -25,6 +26,7 @@ var_calling_threshold  <- as.double(args[3])
 Nb_min <- as.integer(args[4])#1
 # Minimum bottleneck size we consider. 
 Nb_max <- as.integer(args[5])
+percent_confidence_interval <- as.double(args[6])
 # Maximum bottleneck size we consider.
 ############################################################.  LOAD IN DATA AND DECLARE ARRAYS TO BE FILLED
 num_NB_values <- Nb_max -Nb_min + 1
@@ -69,7 +71,8 @@ for (h in 1:(Nb_min )){
 	  }
 max_log_likelihood = which(log_likelihood_function == max(log_likelihood_function))  ## This is the point on the x-axis (bottleneck size) at which log likelihood is maximized
 max_val =  max(log_likelihood_function)
-CI_height = max_val - 1.92  # This value (  height on y axis) determines the confidence intervals using the likelihood ratio test
+CI_height = max_val - erfinv(percent_confidence_interval)*sqrt(2)   # This value (  height on y axis) determines the confidence intervals using the likelihood ratio test
+#print(erfinv(percent_confidence_interval)*sqrt(2))
 CI_index_lower = Nb_min
 CI_index_upper = max_log_likelihood
 
