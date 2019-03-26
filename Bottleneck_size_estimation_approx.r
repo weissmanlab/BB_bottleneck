@@ -2,14 +2,28 @@
 #install.packages("argparse")
 library(argparse)
 library(mdatools)
-args <- commandArgs(trailingOnly = TRUE)
-if (length(args)!=6) {
-  print(length(args))
-  stop("Six input arguments are required - file with lists of donor and recipient frequencies, TRUE or FALSE (determines if pdf plot is produced), variant calling threshold, minimum bottleneck size, maximum bottleneck size, confidence level.", call.=FALSE)
-}
+parser <- ArgumentParser()
+#if (length(args)!=1) {
+#  print(length(args))
+#  stop("Six input arguments are required - file with lists of donor and recipient frequencies, TRUE or FALSE (determines if pdf plot is produced), variant calling threshold, minimum bottleneck size, maximum bottleneck size, confidence level.", call.=FALSE)
+#}
+parser$add_argument("--file", type="character", default= "example_data/donor_and_recipient_freqs.txt",
+    help="file containing variant frequencies")
+parser$add_argument("--plot_bool", type="logical", default= FALSE,
+    help="determines whether pdf plot approx_plot.pdf is produced or not")
+parser$add_argument("--var_calling_threshold", type="double", default= 0.03,
+    help="variant calling threshold")
+parser$add_argument("--Nb_min", type="integer", default= 1,
+    help="Minimum bottleneck value considered")
+parser$add_argument("--Nb_max", type="integer", default= 200,
+    help="Maximum bottleneck value considered")
+parser$add_argument("--confidence_level", type="double", default= .95,
+    help="Confidence level (determines bounds of confidence interval)")
+args <- parser$parse_args()
 
 
-donor_and_recip_freqs_observed <- read.table(args[1])
+
+donor_and_recip_freqs_observed <- read.table(args$file)
 #donor_freqs_observed <- read.table(args[1])
 donor_freqs_observed <- as.data.frame(donor_and_recip_freqs_observed[, 1])
 #print(donor_freqs_observed)
@@ -19,14 +33,14 @@ recipient_freqs_observed <- as.data.frame(donor_and_recip_freqs_observed[, 2]) #
 # We read in and save the list of recipient frequencies
 n_variants <- nrow(donor_and_recip_freqs_observed)#nrow(donor_freqs_observed) # number of variants 
 #print(n_variants)
-plot_bool  <- eval(args[2])
+plot_bool  <- args$plot_bool
 
-var_calling_threshold  <- as.double(args[3])
+var_calling_threshold  <- args$var_calling_threshold
 
-Nb_min <- as.integer(args[4])#1
+Nb_min <- args$Nb_min#1
 # Minimum bottleneck size we consider. 
-Nb_max <- as.integer(args[5])
-percent_confidence_interval <- as.double(args[6])
+Nb_max <-  args$Nb_max
+confidence_level <- args$confidence_level
 # Maximum bottleneck size we consider.
 ############################################################.  LOAD IN DATA AND DECLARE ARRAYS TO BE FILLED
 num_NB_values <- Nb_max -Nb_min + 1
@@ -71,7 +85,7 @@ for (h in 1:(Nb_min )){
 	  }
 max_log_likelihood = which(log_likelihood_function == max(log_likelihood_function))  ## This is the point on the x-axis (bottleneck size) at which log likelihood is maximized
 max_val =  max(log_likelihood_function)
-CI_height = max_val - erfinv(percent_confidence_interval)*sqrt(2)   # This value (  height on y axis) determines the confidence intervals using the likelihood ratio test
+CI_height = max_val - erfinv(confidence_level)*sqrt(2)   # This value (  height on y axis) determines the confidence intervals using the likelihood ratio test
 #print(erfinv(percent_confidence_interval)*sqrt(2))
 CI_index_lower = Nb_min
 CI_index_upper = max_log_likelihood
@@ -106,11 +120,13 @@ plot(log_likelihood_function)
 abline(v = max_log_likelihood, col="black" )  # Draws a verticle line at Nb value for which log likelihood is maximized
 abline(v = CI_index_lower, col="green" ) # confidence intervals
 abline(v = CI_index_upper, col="green" )
+dev.off()
+}
+
+
 print("Bottleneck size")
 print(max_log_likelihood)
 print("confidence interval left bound")
 print(CI_index_lower)
 print("confidence interval right bound")
 print(CI_index_upper)
-dev.off()
-}

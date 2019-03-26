@@ -1,0 +1,19 @@
+usage: Bottleneck_size_estimation_approx.r [-h] [--file FILE]
+                                           [--plot_bool PLOT_BOOL]
+                                           [--var_calling_threshold VAR_CALLING_THRESHOLD]
+                                           [--Nb_min NB_MIN] [--Nb_max NB_MAX]
+                                           [--confidence_level CONFIDENCE_LEVEL]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --file FILE           file containing variant frequencies
+  --plot_bool PLOT_BOOL
+                        determines whether pdf plot approx_plot.pdf is
+                        produced or not
+  --var_calling_threshold VAR_CALLING_THRESHOLD
+                        variant calling threshold
+  --Nb_min NB_MIN       Minimum bottleneck value considered
+  --Nb_max NB_MAX       Maximum bottleneck value considered
+  --confidence_level CONFIDENCE_LEVEL
+                        Confidence level (determines bounds of confidence
+                        interval)

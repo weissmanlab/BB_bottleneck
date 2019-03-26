@@ -2,28 +2,39 @@
 library(rmutil)
 library(argparse)
 library(mdatools)
-args <- commandArgs(trailingOnly = TRUE)
-if (length(args)!=6) {
-  print(length(args))
-  stop("Six input arguments are required - file with lists of donor frequencies and recipient frequencies and reads, TRUE or FALSE (determines if pdf plot is produced), variant calling threshold, minimum bottleneck size, maximum bottleneck size, confidence level.", call.=FALSE)
-}
-
+parser <- ArgumentParser()
+#if (length(args)!=1) {
+#  print(length(args))
+#  stop("Six input arguments are required - file with lists of donor and recipient frequencies, TRUE or FALSE (determines if pdf plot is produced), variant calling threshold, minimum bottleneck size, maximum bottleneck size, confidence level.", call.=FALSE)
+#}
+parser$add_argument("--file", type="character", default= "example_data/donor_freqs_recip_freqs_and_reads.txt",
+    help="file containing variant frequencies and reads")
+parser$add_argument("--plot_bool", type="logical", default= FALSE,
+    help="determines whether pdf plot exact_plot.pdf is produced or not")
+parser$add_argument("--var_calling_threshold", type="double", default= 0.03,
+    help="variant calling threshold")
+parser$add_argument("--Nb_min", type="integer", default= 1,
+    help="Minimum bottleneck value considered")
+parser$add_argument("--Nb_max", type="integer", default= 200,
+    help="Maximum bottleneck value considered")
+parser$add_argument("--confidence_level", type="double", default= .95,
+    help="Confidence level (determines bounds of confidence interval)")
+args <- parser$parse_args()
 #var_calling_threshold_table  <-  read.table(args[4]) #var_calling_threshold_dummy[1, 1] 
 
-donor_freqs_recip_freqs_and_reads_observed <- read.table(args[1])
-donor_freqs_observed <- read.table(args[1])
+donor_freqs_recip_freqs_and_reads_observed <- read.table(args$file)
 
-donor_freqs_observed <- as.data.frame(donor_freqs_observed[,1])
+donor_freqs_observed <- as.data.frame(donor_freqs_recip_freqs_and_reads_observed[,1])
 
 n_variants <- nrow(donor_freqs_recip_freqs_and_reads_observed)
 #print(n_variants)
-recipient_total_reads <- as.data.frame(donor_freqs_recip_freqs_and_reads_observed [,3]) #read.table(args[2])
-recipient_var_reads_observed <- as.data.frame(donor_freqs_recip_freqs_and_reads_observed [,4])#read.table(args[3])
-plot_bool  <- eval(args[2])
-var_calling_threshold  <- as.double(args[3])
-Nb_min <-  as.integer(args[4])
-Nb_max <- as.integer(args[5])
-percent_confidence_interval <- as.double(args[6])
+recipient_total_reads <- as.data.frame(donor_freqs_recip_freqs_and_reads_observed[,3]) #read.table(args[2])
+recipient_var_reads_observed <- as.data.frame(donor_freqs_recip_freqs_and_reads_observed[,4])#read.table(args[3])
+plot_bool  <- args$plot_bool
+var_calling_threshold  <- args$var_calling_threshold
+Nb_min <-  args$Nb_min
+Nb_max <- args$Nb_max
+confidence_level <- args$confidence_level
 num_NB_values <- Nb_max -Nb_min + 1
 likelihood_matrix <- matrix( 0, n_variants, num_NB_values)
 log_likelihood_matrix <- matrix( 0, n_variants, num_NB_values)
@@ -81,7 +92,7 @@ for (h in 1:(Nb_min )){
 	  }
 max_log_likelihood = which(log_likelihood_function == max(log_likelihood_function))  ## This is the point on the x-axis (bottleneck size) at which log likelihood is maximized
 max_val =  max(log_likelihood_function)
-CI_height = max_val - erfinv(percent_confidence_interval)*sqrt(2)  # This value (  height on y axis) determines the confidence intervals using the likelihood ratio test
+CI_height = max_val - erfinv(confidence_level)*sqrt(2)  # This value (  height on y axis) determines the confidence intervals using the likelihood ratio test
 #print(erfinv(percent_confidence_interval)*sqrt(2))
 CI_index_lower = Nb_min
 CI_index_upper = max_log_likelihood
@@ -113,11 +124,12 @@ plot(log_likelihood_function)
 abline(v = max_log_likelihood, col="black" )  # Draws a verticle line at Nb value for which log likelihood is maximized
 abline(v = CI_index_lower, col="green" ) # confidence intervals
 abline(v = CI_index_upper, col="green" )
+dev.off()
+}
+
 print("Bottleneck size")
 print(max_log_likelihood)
 print("confidence interval left bound")
 print(CI_index_lower)
 print("confidence interval right bound")
 print(CI_index_upper)
-dev.off()
-}
