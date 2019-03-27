@@ -1,2 +1,0 @@
-getwd()
-source("/Users/tylersmith/bottleneck_size_estimation_code/Bottleneck_size_estimation_approx.r")
