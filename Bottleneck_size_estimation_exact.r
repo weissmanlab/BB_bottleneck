@@ -7,7 +7,7 @@ parser <- ArgumentParser()
 #  print(length(args))
 #  stop("Six input arguments are required - file with lists of donor and recipient frequencies, TRUE or FALSE (determines if pdf plot is produced), variant calling threshold, minimum bottleneck size, maximum bottleneck size, confidence level.", call.=FALSE)
 #}
-parser$add_argument("--file", type="character", default= "example_data/donor_freqs_recip_freqs_and_reads.txt",
+parser$add_argument("--file", type="character", default= "no_input_return_error",
     help="file containing variant frequencies and reads")
 parser$add_argument("--plot_bool", type="logical", default= FALSE,
     help="determines whether pdf plot exact_plot.pdf is produced or not")
@@ -20,6 +20,7 @@ parser$add_argument("--Nb_max", type="integer", default= 200,
 parser$add_argument("--confidence_level", type="double", default= .95,
     help="Confidence level (determines bounds of confidence interval)")
 args <- parser$parse_args()
+if (args$file == "no_input_return_error" ) { stop("file with lists of donor and recipient frequencies is a required argument.", call.=FALSE)}
 #var_calling_threshold_table  <-  read.table(args[4]) #var_calling_threshold_dummy[1, 1] 
 
 donor_freqs_recip_freqs_and_reads_observed <- read.table(args$file)
@@ -35,14 +36,20 @@ var_calling_threshold  <- args$var_calling_threshold
 Nb_min <-  args$Nb_min
 Nb_max <- args$Nb_max
 confidence_level <- args$confidence_level
-num_NB_values <- Nb_max -Nb_min + 1
-likelihood_matrix <- matrix( 0, n_variants, num_NB_values)
-log_likelihood_matrix <- matrix( 0, n_variants, num_NB_values)
+
 log_likelihood_function <- matrix( 0, Nb_max)
 # create array of likelihoods for every variant and every Nb value
 ##########################################################################
 ########################################################################
-for (i in 1:n_variants) {for (j in 1:num_NB_values) {
+log_likelihood_function <- matrix( 0, Nb_max)
+
+generate_log_likelihood_function_exact <- function(donor_freqs_observed, recipient_total_reads, recipient_var_reads_observed, Nb_min, Nb_max, var_calling_threshold, confidence_level)
+{
+  num_NB_values <- Nb_max -Nb_min + 1
+likelihood_matrix <- matrix( 0, n_variants, num_NB_values)
+log_likelihood_matrix <- matrix( 0, n_variants, num_NB_values)
+  log_likelihood_function_dummy <- matrix( 0, Nb_max)
+  for (i in 1:n_variants) {for (j in 1:num_NB_values) {
   Nb_val <- (j - 1 + Nb_min)
   nu_donor <- donor_freqs_observed[i, 1]
   variant_reads <- recipient_var_reads_observed[i, 1]
@@ -82,8 +89,14 @@ for (i in 1:n_variants) {for (j in 1:num_NB_values) {
     log_likelihood_matrix[i,j] = log(likelihood_matrix[i, j])
          }
 # Now we sum over log likelihoods of the variants at different loci to get the total log likelihood for each value of Nb
-log_likelihood_function[Nb_val] <- log_likelihood_function[Nb_val] + log_likelihood_matrix[i,j]
+log_likelihood_function_dummy[Nb_val] <- log_likelihood_function_dummy[Nb_val] + log_likelihood_matrix[i,j]
 }}
+return(log_likelihood_function_dummy)
+
+}
+
+
+log_likelihood_function <- generate_log_likelihood_function_exact(donor_freqs_observed, recipient_total_reads, recipient_var_reads_observed, Nb_min, Nb_max, var_calling_threshold, confidence_level)
 ############################################################
 ############################################################
 for (h in 1:(Nb_min )){  

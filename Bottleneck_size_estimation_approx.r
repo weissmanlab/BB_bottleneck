@@ -7,7 +7,7 @@ parser <- ArgumentParser()
 #  print(length(args))
 #  stop("Six input arguments are required - file with lists of donor and recipient frequencies, TRUE or FALSE (determines if pdf plot is produced), variant calling threshold, minimum bottleneck size, maximum bottleneck size, confidence level.", call.=FALSE)
 #}
-parser$add_argument("--file", type="character", default= "example_data/donor_and_recipient_freqs.txt",
+parser$add_argument("--file", type="character", default= "no_input_return_error",
     help="file containing variant frequencies")
 parser$add_argument("--plot_bool", type="logical", default= FALSE,
     help="determines whether pdf plot approx_plot.pdf is produced or not")
@@ -20,7 +20,10 @@ parser$add_argument("--Nb_max", type="integer", default= 200,
 parser$add_argument("--confidence_level", type="double", default= .95,
     help="Confidence level (determines bounds of confidence interval)")
 args <- parser$parse_args()
-
+if (args$file == "no_input_return_error" ) { stop("file with lists of donor and recipient frequencies is a required argument.", call.=FALSE)}
+  #print(length(args))
+#  stop("Six input arguments are required - file with lists of donor and recipient frequencies, TRUE or FALSE (determines if pdf plot is produced), variant calling threshold, minimum bottleneck size, maximum bottleneck size, confidence level.", call.=FALSE)
+#}
 
 
 donor_and_recip_freqs_observed <- read.table(args$file)
@@ -43,48 +46,77 @@ Nb_max <-  args$Nb_max
 confidence_level <- args$confidence_level
 # Maximum bottleneck size we consider.
 ############################################################.  LOAD IN DATA AND DECLARE ARRAYS TO BE FILLED
-num_NB_values <- Nb_max -Nb_min + 1
+log_likelihood_function_dummy <- matrix( 0, Nb_max )
+
+#######################################################
+generate_log_likelihood_function_approx <- function(donor_freqs_observed, recipient_freqs_observed, Nb_min, Nb_max, var_calling_threshold, confidence_level)
+{
+
+    num_NB_values <- Nb_max -Nb_min + 1
 likelihood_matrix <- matrix( 0, n_variants, num_NB_values)
 #This matrix stores the likelihood values for each variant frequency and bottleneck size.  
 log_likelihood_matrix <- matrix( 0, n_variants, num_NB_values)
 #This matrix stores the log likelihood values for each variant frequency and bottleneck size.  We can sum the log likelihoods of all the variant alleles to get the total log likelihood. 
-log_likelihood_function <- matrix( 0, Nb_max )
-# create array of likelihoods for every variant and every Nb value
-###################################################################################### BELOW THIS LINE CREATES LIKELIHOOD AND LOG LIKELIHOOD 
+log_likelihood_function_dummy <- matrix( 0, Nb_max )
+
+
 for (i in 1:n_variants) {for (j in 1:num_NB_values) {
   Nb_val <- (j - 1 + Nb_min)
     nu_donor <- donor_freqs_observed[i, 1]
     nu_recipient <- recipient_freqs_observed[i, 1]
     if (recipient_freqs_observed[i, 1] >= var_calling_threshold)
-   	    { # implement variant calling threshold
+        { # implement variant calling threshold
 for (k in 0:Nb_val){  
       likelihood_matrix[i, j] <- likelihood_matrix[i, j] + 
-	(dbeta(nu_recipient, k, (Nb_val - k))*dbinom(k, size=Nb_val, prob= nu_donor)) 
-	      }
-	log_likelihood_matrix[i,j] = log(likelihood_matrix[i, j])  
-	 }
+  (dbeta(nu_recipient, k, (Nb_val - k))*dbinom(k, size=Nb_val, prob= nu_donor)) 
+        }
+  log_likelihood_matrix[i,j] = log(likelihood_matrix[i, j])  
+   }
  if (recipient_freqs_observed[i, 1] < var_calling_threshold)
-   	    { # implement variant calling threshold
+        { # implement variant calling threshold
    
    likelihood_matrix[i, j] = 0
    log_likelihood_matrix[i,j] = 0
    for (k in 0:Nb_val){   likelihood_matrix[i, j] <- likelihood_matrix[i, j] + 
-	             (pbeta(var_calling_threshold, k, (Nb_val - k))*dbinom(k, size=Nb_val, prob= nu_donor)) 
+               (pbeta(var_calling_threshold, k, (Nb_val - k))*dbinom(k, size=Nb_val, prob= nu_donor)) 
                       } 
 log_likelihood_matrix[i,j] = log(likelihood_matrix[i, j])
             }
 # Now we sum over log likelihoods of the variants at different loci to get the total log likelihood for each value of Nb
-log_likelihood_function[ Nb_val] <- log_likelihood_function[ Nb_val] + log_likelihood_matrix[i,j]
+log_likelihood_function_dummy[ Nb_val] <- log_likelihood_function_dummy[ Nb_val] + log_likelihood_matrix[i,j]
 # Shifting entries of log_likelihood function to ensure plot begins at proper point on x axis
 }}
+
+
+return(log_likelihood_function_dummy)
+
+}
+#################################################################
+#################################################################
+log_likelihood_function <- generate_log_likelihood_function_approx(donor_freqs_observed, recipient_freqs_observed, Nb_min, Nb_max, var_calling_threshold, confidence_level)
+
 ############################################################################################### ABOVE THIS LINE CALCULATES LIKELIHOOD AND LOG LIKELIHOOD 
 ###############################################################################################  BELOW THIS LINE DETERMINES PEAK LOG LIKELIHOOD AND CONFIDENCE INTERVALS
+
+
+
+
+
+
+
 for (h in 1:(Nb_min )){  
 		if(h< Nb_min)
 		{log_likelihood_function[h] = - 999999999}	      # kludge for ensuring that these values less than Nb_min don't interfere with our search for the max of log likelihood in the interval of Nb_min to Nb_max
 	  }
+
+
+
+
+
 max_log_likelihood = which(log_likelihood_function == max(log_likelihood_function))  ## This is the point on the x-axis (bottleneck size) at which log likelihood is maximized
 max_val =  max(log_likelihood_function)
+
+
 CI_height = max_val - erfinv(confidence_level)*sqrt(2)   # This value (  height on y axis) determines the confidence intervals using the likelihood ratio test
 #print(erfinv(percent_confidence_interval)*sqrt(2))
 CI_index_lower = Nb_min
