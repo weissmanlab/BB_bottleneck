@@ -26,11 +26,11 @@ Nb_max <- args$Nb_max
 confidence_level <- args$confidence_level
 donor_freqs_recip_freqs_and_reads_observed <- read.table(args$file)
 original_row_count <- nrow(donor_freqs_recip_freqs_and_reads_observed)
-donor_freqs_recip_freqs_and_reads_observed <- subset(donor_freqs_recip_freqs_and_reads_observed, donor_freqs_recip_freqs_and_reads_observed[, 1] > 0)
+donor_freqs_recip_freqs_and_reads_observed <- subset(donor_freqs_recip_freqs_and_reads_observed, donor_freqs_recip_freqs_and_reads_observed[, 1] >= var_calling_threshold)
 new_row_count <- nrow(donor_freqs_recip_freqs_and_reads_observed)
 
 if(new_row_count != original_row_count )
-{print("WARNING:  Rows of the input file with zero donor frequency have been removed during analysis.  This algorithm only works for finite donor frequencies.  ")}
+{print("WARNING:  Rows of the input file with donor frequency less than variant calling threshold have been removed during analysis. ")}
 
 
 donor_freqs_observed <-as.data.frame(donor_freqs_recip_freqs_and_reads_observed[,1])
