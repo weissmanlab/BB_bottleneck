@@ -25,7 +25,16 @@ Nb_min <-  args$Nb_min
 Nb_max <- args$Nb_max
 confidence_level <- args$confidence_level
 donor_freqs_recip_freqs_and_reads_observed <- read.table(args$file)
-donor_freqs_observed <- as.data.frame(donor_freqs_recip_freqs_and_reads_observed[,1])
+original_row_count <- nrow(donor_freqs_recip_freqs_and_reads_observed)
+donor_freqs_recip_freqs_and_reads_observed <- subset(donor_freqs_recip_freqs_and_reads_observed, donor_freqs_recip_freqs_and_reads_observed[, 1] > 0)
+new_row_count <- nrow(donor_freqs_recip_freqs_and_reads_observed)
+
+if(new_row_count != original_row_count )
+{print("WARNING:  Rows of the input file with zero donor frequency have been removed during analysis.  This algorithm only works for finite donor frequencies.  ")}
+
+
+donor_freqs_observed <-as.data.frame(donor_freqs_recip_freqs_and_reads_observed[,1])
+
 n_variants <- nrow(donor_freqs_recip_freqs_and_reads_observed)
 recipient_total_reads <- as.data.frame(donor_freqs_recip_freqs_and_reads_observed[,3]) #read.table(args[2])
 recipient_var_reads_observed <- as.data.frame(donor_freqs_recip_freqs_and_reads_observed[,4])#read.table(args[3])

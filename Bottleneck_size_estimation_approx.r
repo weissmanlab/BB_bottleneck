@@ -19,12 +19,20 @@ parser$add_argument("--confidence_level", type="double", default= .95,
 args <- parser$parse_args()
 if (args$file == "no_input_return_error" ) { stop("file with lists of donor and recipient frequencies is a required argument.", call.=FALSE)}
  
+ 
 plot_bool  <- args$plot_bool
 var_calling_threshold  <- args$var_calling_threshold
 Nb_min <- args$Nb_min # Minimum bottleneck size we consider. 
 Nb_max <-  args$Nb_max
 confidence_level <- args$confidence_level
-donor_and_recip_freqs_observed <- read.table(args$file) #donor_freqs_observed <- read.table(args[1])
+donor_and_recip_freqs_observed <- read.table(args$file) 
+original_row_count <- nrow(donor_and_recip_freqs_observed)
+
+donor_and_recip_freqs_observed <- subset(donor_and_recip_freqs_observed, donor_and_recip_freqs_observed[, 1] > 0)
+new_row_count <- nrow(donor_and_recip_freqs_observed)
+if(new_row_count != original_row_count )
+{print("WARNING:  Rows of the input file with zero donor frequency have been removed during analysis.  This algorithm only works for finite donor frequencies.  ")}
+#donor_freqs_observed <- read.table(args[1])
 donor_freqs_observed <- as.data.frame(donor_and_recip_freqs_observed[, 1]) # We read in and save the list of donor frequencies
 recipient_freqs_observed <- as.data.frame(donor_and_recip_freqs_observed[, 2]) # We read in and save the list of recipient frequencies
 n_variants <- nrow(donor_and_recip_freqs_observed)#nrow(donor_freqs_observed) # number of variants 
