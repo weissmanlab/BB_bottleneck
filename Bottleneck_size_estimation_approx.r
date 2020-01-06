@@ -56,7 +56,7 @@ for (i in 1:n_variants) {for (j in 1:num_NB_values) {
         { # implement variant calling threshold
 for (k in 0:Nb_val){  
       likelihood_matrix[i, j] <- likelihood_matrix[i, j] + 
-  (dbeta(nu_recipient, k, (Nb_val - k))*dbinom(k, size=Nb_val, prob= nu_donor)) 
+  (dbeta(nu_recipient, k, (Nb_val - k))*dbinom(k, size=Nb_val, prob= nu_donor))
         }
   log_likelihood_matrix[i,j] = log(likelihood_matrix[i, j])  
    }
@@ -66,7 +66,7 @@ for (k in 0:Nb_val){
    likelihood_matrix[i, j] = 0
    log_likelihood_matrix[i,j] = 0
    for (k in 0:Nb_val){   likelihood_matrix[i, j] <- likelihood_matrix[i, j] + 
-               (pbeta(var_calling_threshold, k, (Nb_val - k))*dbinom(k, size=Nb_val, prob= nu_donor)) 
+               (pbeta(var_calling_threshold, k, (Nb_val - k))*dbinom(k,size=Nb_val, prob= nu_donor))
                       } 
 log_likelihood_matrix[i,j] = log(likelihood_matrix[i, j])
             }
@@ -187,3 +187,4 @@ print("confidence interval left bound")
 print(CI_index_lower)
 print("confidence interval right bound")
 print(CI_index_upper)
+

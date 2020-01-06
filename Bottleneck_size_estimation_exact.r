@@ -65,7 +65,7 @@ log_likelihood_matrix <- matrix( 0, n_variants, num_NB_values)
     m <- alpha/(alpha + beta)
 	s <- (alpha + beta)
     likelihood_matrix[i, j] <- likelihood_matrix[i, j] + 
-	(dbetabinom( variant_reads, total_reads, m, s, log = FALSE)*dbinom(k, size=Nb_val, prob= nu_donor)) 
+	(dbetabinom( variant_reads, total_reads, m, s, log = FALSE)*dbinom(k, size=Nb_val, prob= nu_donor))
 	     }
 	log_likelihood_matrix[i,j] = log(likelihood_matrix[i, j])  
 	 }
@@ -83,7 +83,7 @@ log_likelihood_matrix <- matrix( 0, n_variants, num_NB_values)
     m <- alpha/(alpha + beta)
 	s <- (alpha + beta)
     likelihood_matrix[i, j] <- likelihood_matrix[i, j] + 
-	(pbetabinom( floor(var_calling_threshold*total_reads), total_reads, m, s)*dbinom(k, size=Nb_val, prob= nu_donor)) 
+	(pbetabinom( floor(var_calling_threshold*total_reads), total_reads, m, s)*dbinom(k, size=Nb_val, prob= nu_donor))
 	}
     log_likelihood_matrix[i,j] = log(likelihood_matrix[i, j])
          }
