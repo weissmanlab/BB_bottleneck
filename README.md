@@ -3,8 +3,9 @@
 This is the implementation for [transmission bottleneck estimation based on beta-binomial sampling](https://www.biorxiv.org/content/10.1101/101790v1).  
 
 ## Requirements
-- R 3.6+
+- R 3.6.2+
 - tidyverse
+- rmutil
 - argparse
 - Rscript
 

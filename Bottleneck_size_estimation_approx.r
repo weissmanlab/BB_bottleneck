@@ -1,10 +1,10 @@
-#########################################################
-#install.packages("argparse")
+library(tidyverse)
 library(argparse)
-library(mdatools)
+
+# Handle command line arguments first
 parser <- ArgumentParser()
 
-parser$add_argument("--file", type="character", default= "no_input_return_error",
+parser$add_argument("--file", type="character", default = "./example_data/donor_and_recipient_freqs.txt" ,
     help="file containing variant frequencies")
 parser$add_argument("--plot_bool", type="logical", default= FALSE,
     help="determines whether pdf plot approx_plot.pdf is produced or not")
@@ -17,174 +17,83 @@ parser$add_argument("--Nb_max", type="integer", default= 200,
 parser$add_argument("--confidence_level", type="double", default= .95,
     help="Confidence level (determines bounds of confidence interval)")
 args <- parser$parse_args()
-if (args$file == "no_input_return_error" ) { stop("file with lists of donor and recipient frequencies is a required argument.", call.=FALSE)}
- 
- 
-plot_bool  <- args$plot_bool
-var_calling_threshold  <- args$var_calling_threshold
-Nb_min <- args$Nb_min # Minimum bottleneck size we consider. 
-Nb_max <-  args$Nb_max
-confidence_level <- args$confidence_level
-donor_and_recip_freqs_observed <- read.table(args$file) 
-original_row_count <- nrow(donor_and_recip_freqs_observed)
 
+# Now create necessary variables and dataframes
+
+plot_bool  <- args$plot_bool # determines whether or not a plot of log likelihood vs bottleneck size is produced
+
+var_calling_threshold  <- args$var_calling_threshold # variant calling threshold for frequency in recipient
+ 
+Nb_min <- args$Nb_min      # Minimum bottleneck size we consider
+if(Nb_min < 1){Nb_min = 1} # preventing erros with Nb_min at 0 or lower 
+Nb_max <-  args$Nb_max     # Maximum bottlebeck size we consider
+
+confidence_level <- args$confidence_level # determines width of confidence interval
+
+donor_and_recip_freqs_observed <- read.table(args$file) # table of SNP frequencies in donor and recipient
+original_row_count <- nrow(donor_and_recip_freqs_observed)  # number of rows in raw table
 donor_and_recip_freqs_observed <- subset(donor_and_recip_freqs_observed, donor_and_recip_freqs_observed[, 1] >= var_calling_threshold)
-new_row_count <- nrow(donor_and_recip_freqs_observed)
+new_row_count <- nrow(donor_and_recip_freqs_observed) # number of rows in filtered table
+
 if(new_row_count != original_row_count )
 {print("WARNING:  Rows of the input file with donor frequency less than variant calling threshold have been removed during analysis. ")}
-#donor_freqs_observed <- read.table(args[1])
-donor_freqs_observed <- as.data.frame(donor_and_recip_freqs_observed[, 1]) # We read in and save the list of donor frequencies
-recipient_freqs_observed <- as.data.frame(donor_and_recip_freqs_observed[, 2]) # We read in and save the list of recipient frequencies
-n_variants <- nrow(donor_and_recip_freqs_observed)#nrow(donor_freqs_observed) # number of variants 
 
-#######################################################
-#######################################################
-generate_log_likelihood_function_approx <- function(donor_freqs_observed, recipient_freqs_observed, Nb_min, Nb_max, var_calling_threshold, confidence_level)
-{
+n_variants <- nrow(donor_and_recip_freqs_observed) # number of variants 
 
-    num_NB_values <- Nb_max -Nb_min + 1
-likelihood_matrix <- matrix( 0, n_variants, num_NB_values)#This matrix stores the likelihood values for each variant frequency and bottleneck size.  
-log_likelihood_matrix <- matrix( 0, n_variants, num_NB_values)#This matrix stores the log likelihood values for each variant frequency and bottleneck size.  We can sum the log likelihoods of all the variant alleles to get the total log likelihood. 
-log_likelihood_function <- matrix( 0, Nb_max )
+freqs_tibble <- tibble(donor_freqs = donor_and_recip_freqs_observed[, 1], recip_freqs = donor_and_recip_freqs_observed[, 2] )
 
+# Now implement the beta binomial algorithm
 
-for (i in 1:n_variants) {for (j in 1:num_NB_values) {
-  Nb_val <- (j - 1 + Nb_min)
-    nu_donor <- donor_freqs_observed[i, 1]
-    nu_recipient <- recipient_freqs_observed[i, 1]
-    if (recipient_freqs_observed[i, 1] >= var_calling_threshold)
-        { # implement variant calling threshold
-for (k in 0:Nb_val){  
-      likelihood_matrix[i, j] <- likelihood_matrix[i, j] + 
-  (dbeta(nu_recipient, k, (Nb_val - k))*dbinom(k, size=Nb_val, prob= nu_donor))
-        }
-  log_likelihood_matrix[i,j] = log(likelihood_matrix[i, j])  
-   }
- if (recipient_freqs_observed[i, 1] < var_calling_threshold)
-        { # implement variant calling threshold
-   
-   likelihood_matrix[i, j] = 0
-   log_likelihood_matrix[i,j] = 0
-   for (k in 0:Nb_val){   likelihood_matrix[i, j] <- likelihood_matrix[i, j] + 
-               (pbeta(var_calling_threshold, k, (Nb_val - k))*dbinom(k,size=Nb_val, prob= nu_donor))
-                      } 
-log_likelihood_matrix[i,j] = log(likelihood_matrix[i, j])
-            }
-# Now we sum over log likelihoods of the variants at different loci to get the total log likelihood for each value of Nb
-log_likelihood_function[ Nb_val] <- log_likelihood_function[ Nb_val] + log_likelihood_matrix[i,j]
-# Shifting entries of log_likelihood function to ensure plot begins at proper point on x axis
-}}
-
-
-return(log_likelihood_function)
-
-}
-#################################################################
-#################################################################
-restrict_log_likelihood <- function(log_likelihood_function, Nb_min, Nb_max) # restricts log likelihood to the interval of interst
-{
-for (h in 1:(Nb_min )){  
-    if(h< Nb_min)
-    {log_likelihood_function[h] = - 999999999}        # kludge for ensuring that these values less than Nb_min don't interfere with our search for the max of log likelihood in the interval of Nb_min to Nb_max
+Log_Beta_Binom <- function(nu_donor, nu_recipient, NB_SIZE)  # This function gives Log Likelihood for every donor recipient SNP frequency pair
+{ LL_val_above <- 0 # used for recipient frequencies above calling threshold
+  LL_val_below <- 0 # used for recipient frequencies below calling threshold
+  for(k in 0:NB_SIZE){
+    LL_val_above <-  LL_val_above +  dbeta(nu_recipient, k, (NB_SIZE - k) )*dbinom(k, size=NB_SIZE, prob= nu_donor)  
+    LL_val_below <- LL_val_below +   pbeta(var_calling_threshold, k, (NB_SIZE - k))*dbinom(k,size=NB_SIZE, prob= nu_donor)
     }
+  LL_val <- if_else(nu_recipient >= var_calling_threshold , LL_val_above,  LL_val_below )
 
-return(log_likelihood_function)
-#print(erfinv(percent_confidence_interval)*sqrt(2))
+   # We use LL_val_above above the calling threshold, and LL_val_below below the calling threshold
+   
+  LL_val <- log(LL_val) # convert likelihood to log likelihood
+  return(LL_val)
 }
 
-
-return_bottleneck_size <- function(log_likelihood_function, Nb_min, Nb_max)
-{ max_log_likelihood = which(log_likelihood_function == max(log_likelihood_function))
-
-    return(max_log_likelihood)
-}
-
-
-return_CI_lower <- function(log_likelihood_function, Nb_min, Nb_max) ## returns lower bound of confidence interval
-  { max_log_likelihood = which(log_likelihood_function == max(log_likelihood_function))  ## This is the point on the x-axis (bottleneck size) at which log likelihood is maximized
-max_val =  max(log_likelihood_function)  ## This is the maximum value of the log likelihood function, found when the index is our bottleneck estimate
-CI_height = max_val - erfinv(confidence_level)*sqrt(2)  # This value (  height on y axis) determines the confidence intervals using the likelihood ratio test
-
-
-    CI_index_lower = Nb_min
-  CI_index_upper = max_log_likelihood
-for (h in 1:Nb_min){  
-    if(h< Nb_min)
-    {log_likelihood_function[h] = NA}   #  Removing parameter values less than Nb_min from plot
-        }
-## above loop just enforces our minimum bottleneck cutoff
-for (h in Nb_min:max_log_likelihood){  
-    test1 = (log_likelihood_function[CI_index_lower] - CI_height) * (log_likelihood_function[CI_index_lower] - CI_height)
-    test2 = (log_likelihood_function[h] - CI_height) * (log_likelihood_function[h] - CI_height)
-        if( test2 < test1){  CI_index_lower = h  }        
-}
-if(  (log_likelihood_function[CI_index_lower] - CI_height) > 0  ){CI_index_lower = CI_index_lower - 1   }  
-# above loops use likelihood ratio test to find lower confidence interval
-for (h in max_log_likelihood:Nb_max)
-{       test1 = (log_likelihood_function[CI_index_upper] - CI_height) * (log_likelihood_function[CI_index_upper] - CI_height)
-      test2 = (log_likelihood_function[h] - CI_height) * (log_likelihood_function[h] - CI_height)
-        if( test2 < test1  ){CI_index_upper = h   }  
-}
-if(  (log_likelihood_function[CI_index_upper] - CI_height) > 0  ){CI_index_upper = CI_index_upper + 1   }  
-    
-  return(CI_index_lower)
-
+LL_func_approx <- function(Nb_size){  # This function sums over all SNP frequencies in the donor and recipient
+  Total_LL <- 0
+ LL_array <- Log_Beta_Binom(freqs_tibble$donor_freqs, freqs_tibble$recip_freqs, Nb_size)  
+ Total_LL <- sum(LL_array)
+   return(Total_LL)
   }
 
 
-return_CI_upper <- function(log_likelihood_function,  Nb_min, Nb_max) ## returns upper bound of confidence interval
-  { max_log_likelihood = which(log_likelihood_function == max(log_likelihood_function))  ## This is the point on the x-axis (bottleneck size) at which log likelihood is maximized
-   max_val =  max(log_likelihood_function)  ## This is the maximum value of the log likelihood function, found when the index is our bottleneck estimate
-   CI_height = max_val - erfinv(confidence_level)*sqrt(2)  # This value (  height on y axis) determines the confidence intervals using the likelihood ratio test
+# Now we define array of Log Likelihoods for all possible bottleneck sizes
+LL_tibble <- tibble(bottleneck_size = c(Nb_min:Nb_max), Log_Likelihood = 0*c(Nb_min:Nb_max)) 
+for(I in 1:nrow(LL_tibble) )
+  {LL_tibble$Log_Likelihood[I] <- LL_func_approx( LL_tibble$bottleneck_size[I] ) }
 
-    CI_index_lower = Nb_min
-  CI_index_upper = max_log_likelihood
-for (h in 1:Nb_min){  
-    if(h< Nb_min)
-    {log_likelihood_function[h] = NA}   #  Removing parameter values less than Nb_min from plot
-        }
-## above loop just enforces our minimum bottleneck cutoff
-for (h in Nb_min:max_log_likelihood){  
-    test1 = (log_likelihood_function[CI_index_lower] - CI_height) * (log_likelihood_function[CI_index_lower] - CI_height)
-    test2 = (log_likelihood_function[h] - CI_height) * (log_likelihood_function[h] - CI_height)
-        if( test2 < test1){  CI_index_lower = h  }        
+
+# Now we find the maximum likelihood estimate and the associated confidence interval
+
+Max_LL <- max(LL_tibble$Log_Likelihood) # Maximum value of log likelihood
+Max_LL_bottleneck <- which(LL_tibble$Log_Likelihood == max(LL_tibble$Log_Likelihood) ) # bottleneck size at which max likelihood occurs
+likelihood_ratio <- qchisq(confidence_level, df=1) # necessary ratio of likelihoods set by confidence level
+ci_tibble <- filter(LL_tibble, 2*(Max_LL - Log_Likelihood) <= likelihood_ratio ) 
+lower_CI_bottleneck <- min(ci_tibble$bottleneck_size) # lower bound of confidence interval
+upper_CI_bottleneck <- max(ci_tibble$bottleneck_size) # upper bound of confidence interval
+
+# now we plot our results
+if(plot_bool == TRUE){
+ggplot(data = LL_tibble) + geom_point(aes(x = bottleneck_size, y= Log_Likelihood )) + 
+  geom_vline(xintercept= Max_LL_bottleneck )  + 
+  geom_vline(xintercept= lower_CI_bottleneck, color = "green" ) +
+  geom_vline(xintercept= upper_CI_bottleneck, color = "green"  ) + 
+  labs(x= "Bottleneck Size", y = "Log Likelihood" )
+ggsave("approx_plot.jpg")
 }
-if(  (log_likelihood_function[CI_index_lower] - CI_height) > 0  ){CI_index_lower = CI_index_lower - 1   }  
-# above loops use likelihood ratio test to find lower confidence interval
-for (h in max_log_likelihood:Nb_max)
-{       test1 = (log_likelihood_function[CI_index_upper] - CI_height) * (log_likelihood_function[CI_index_upper] - CI_height)
-      test2 = (log_likelihood_function[h] - CI_height) * (log_likelihood_function[h] - CI_height)
-        if( test2 < test1  ){CI_index_upper = h   }  
-}
-if(  (log_likelihood_function[CI_index_upper] - CI_height) > 0  ){CI_index_upper = CI_index_upper + 1   }  
-    
-  return(CI_index_upper)
-
-  }
-
-
-log_likelihood_function <- generate_log_likelihood_function_approx(donor_freqs_observed, recipient_freqs_observed, Nb_min, Nb_max, var_calling_threshold, confidence_level)
-log_likelihood_function <- restrict_log_likelihood(log_likelihood_function, Nb_min, Nb_max)
-bottleneck_size <- return_bottleneck_size(log_likelihood_function,  Nb_min, Nb_max)
-CI_index_lower <- return_CI_lower(log_likelihood_function,  Nb_min, Nb_max)
-CI_index_upper <- return_CI_upper(log_likelihood_function,  Nb_min, Nb_max)
-        
-        ##########################
-##############################################################################################  ABOVE THIS LINE DETERMINES PEAK LOG LIKELIHOOD AND CONFIDENCE INTERVALS
- # Npw we plot the result
-if(plot_bool == TRUE)
-{pdf(file="approx_plot.pdf")
-plot(log_likelihood_function)
-abline(v = bottleneck_size, col="black" )  # Draws a verticle line at Nb value for which log likelihood is maximized
-abline(v = CI_index_lower, col="green" ) # confidence intervals
-abline(v = CI_index_upper, col="green" )
-dev.off()
-}
-
 print("Bottleneck size")
-print(bottleneck_size)
+print(Max_LL_bottleneck)
 print("confidence interval left bound")
-print(CI_index_lower)
+print(lower_CI_bottleneck)
 print("confidence interval right bound")
-print(CI_index_upper)
-
+print(upper_CI_bottleneck)
