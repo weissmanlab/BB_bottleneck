@@ -27,7 +27,7 @@ var_calling_threshold  <- args$var_calling_threshold # variant calling threshold
  
 Nb_min <- args$Nb_min # Minimum bottleneck size we consider. 
 if(Nb_min < 1){Nb_min = 1} # preventing erros with Nb_min at 0 or lower 
-Nb_max <-  args$Nb_max <- # Maximum bottlebeck size we consider
+Nb_max <-  args$Nb_max  # Maximum bottlebeck size we consider
 
 confidence_level <- args$confidence_level # determines width of confidence interval
 
