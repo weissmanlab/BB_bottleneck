@@ -3,10 +3,9 @@
 This is the implementation for [transmission bottleneck estimation based on beta-binomial sampling](https://www.biorxiv.org/content/10.1101/101790v1).  
 
 ## Requirements
-- R 3.5.2+
-- rmutil
+- R 3.6+
+- tidyverse
 - argparse
-- mdatools
 - Rscript
 
 Be sure to add the Rscript path to your environment variables or include the path when calling Rscript from the command line.  
@@ -28,7 +27,7 @@ The resulting output is
   [1] "confidence interval right bound"  
   [1] 62  
 
-<img src= "./example_data/approx_plot.jpg" widht = "500" height = "500">
+<img src= "./example_data/approx_plot.pdf" width = "500" height = "500">
 
 For the exact code run
 
@@ -43,7 +42,7 @@ The resulting output is
   [1] "confidence interval right bound"  
   [1] 64  
 
-<img src= "./example_data/exact_plot.jpg" widht = "500" height = "500">
+<img src= "./example_data/exact_plot.pdf" width = "500" height = "500">
 
 
 The six command line arguments for the codes are:

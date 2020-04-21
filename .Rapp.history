@@ -1,4 +1,0 @@
-setwd(~/BB_bottleneck)
-setwd(''~/BB_bottleneck')
-setwd('~/BB_bottleneck')
-source("/Users/tylersmith/BB_bottleneck/Bottleneck_size_estimation_approx.r")
