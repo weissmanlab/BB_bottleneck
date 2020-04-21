@@ -50,11 +50,15 @@ The six command line arguments for the codes are:
 
 - file: a file with lists of donor frequencies and recipient frequencies and reads (required)
 - plot_bool:  logical that determines if pdf plot is produced (optional)
+
 - var_calling_threshold: variant calling threshold (optional)
+
 - Nb_min: minimum bottleneck size (optional)
+
 - Nb_max: maximum bottleneck size (optional)
+
 - confidence_level: confidence level (optional)
 
-For the approximate code the first argument is a two column file, with the columns containing variant frequencies at each locus for the donor and recipient respectively.  For the exact code the first argument is a file with donor and recipient frequencies in the first two columns, total recipient reads in the third column, and variant recipient reads in the fourth column.  Files structured to run for the exact code can also be used with the approximate code.
+For the approximate code, the first argument is a two column file, with the columns containing variant frequencies for the donor and recipient.  For the exact code the first argument is a file with donor and recipient frequencies in the first two columns, total recipient reads in the third column, and variant recipient reads in the fourth column.  Files structured to run for the exact code can also be used with the approximate code.
 
-If an optional argument is not given its default value will be assigned.
+If an optional argument is not given, its default value will be assigned.
