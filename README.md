@@ -27,7 +27,7 @@ The resulting output is
   [1] "confidence interval right bound"  
   [1] 62  
 
-<img src= "./example_data/approx_plot.pdf"  height = "500">
+<img src= "./example_data/approx_plot.jpg"  height = "500">
 
 For the exact code run
 
@@ -42,7 +42,7 @@ The resulting output is
   [1] "confidence interval right bound"  
   [1] 64  
 
-<img src= "./example_data/exact_plot.pdf"  height = "500">
+<img src= "./example_data/exact_plot.jpg"  height = "500">
 
 
 The six command line arguments for the codes are:
