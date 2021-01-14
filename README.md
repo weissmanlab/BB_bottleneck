@@ -17,7 +17,8 @@ Be sure to add the Rscript path to your environment variables or include the pat
 
 For the approximate code run
 
-  Rscript  Bottleneck_size_estimation_approx.r --file "example_data/donor_and_recipient_freqs.txt"  --plot_bool TRUE  --var_calling_threshold 0.03  --Nb_min 1 --Nb_max 200 --confidence_level .95
+  Rscript Bottleneck_size_estimation_approx.r --file "example_data/donor_and_recipient_freqs.txt" --plot_bool TRUE --var_calling_threshold 0.03 --Nb_min 1 --Nb_max 200 --Nb_increment 1 --confidence_level .95
+
 
 The resulting output is
 
@@ -32,7 +33,8 @@ The resulting output is
 
 For the exact code run
 
-  Rscript  Bottleneck_size_estimation_exact.r --file "example_data/donor_freqs_recip_freqs_and_reads.txt"  --plot_bool TRUE  --var_calling_threshold 0.03  --Nb_min 1 --Nb_max 200 --confidence_level .95
+  Rscript Bottleneck_size_estimation_exact.r --file "example_data/donor_freqs_recip_freqs_and_reads.txt" --plot_bool TRUE --var_calling_threshold 0.03 --Nb_min 1 --Nb_max 200 --Nb_increment 1 --confidence_level .95
+
 
 The resulting output is
 
@@ -56,6 +58,8 @@ The six command line arguments for the codes are:
 - Nb_min: minimum bottleneck size (optional)
 
 - Nb_max: maximum bottleneck size (optional)
+
+- Nb_increment: spacing between bottleneck sizes (optional)
 
 - confidence_level: confidence level (optional)
 

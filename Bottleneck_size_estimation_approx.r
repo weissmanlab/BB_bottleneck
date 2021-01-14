@@ -14,6 +14,8 @@ parser$add_argument("--Nb_min", type="integer", default= 1,
     help="Minimum bottleneck value considered")
 parser$add_argument("--Nb_max", type="integer", default= 200,
     help="Maximum bottleneck value considered")
+parser$add_argument("--Nb_increment", type="integer", default= 1,
+                    help="increment between Nb values considered, i.e., all values considered will be multiples of Nb_increment that fall between Nb_min and Nb_max")
 parser$add_argument("--confidence_level", type="double", default= .95,
     help="Confidence level (determines bounds of confidence interval)")
 args <- parser$parse_args()
@@ -27,7 +29,7 @@ var_calling_threshold  <- args$var_calling_threshold # variant calling threshold
 Nb_min <- args$Nb_min      # Minimum bottleneck size we consider
 if(Nb_min < 1){Nb_min = 1} # preventing erros with Nb_min at 0 or lower 
 Nb_max <-  args$Nb_max     # Maximum bottlebeck size we consider
-
+Nb_increment <- args$Nb_increment
 confidence_level <- args$confidence_level # determines width of confidence interval
 
 donor_and_recip_freqs_observed <- read.table(args$file) # table of SNP frequencies in donor and recipient
@@ -60,7 +62,7 @@ Log_Beta_Binom <- function(nu_donor, nu_recipient, NB_SIZE)  # This function giv
 }
 
 LL_func_approx <- function(Nb_size){  # This function sums over all SNP frequencies in the donor and recipient
-  Total_LL <- 0
+ Total_LL <- 0
  LL_array <- Log_Beta_Binom(freqs_tibble$donor_freqs, freqs_tibble$recip_freqs, Nb_size)  
  Total_LL <- sum(LL_array)
    return(Total_LL)
@@ -68,7 +70,14 @@ LL_func_approx <- function(Nb_size){  # This function sums over all SNP frequenc
 
 
 # Now we define array of Log Likelihoods for all possible bottleneck sizes
-LL_tibble <- tibble(bottleneck_size = c(Nb_min:Nb_max), Log_Likelihood = 0*c(Nb_min:Nb_max)) 
+bottleneck_values_vector <- c()
+for ( i in Nb_min:Nb_max)
+{  if(i%%Nb_increment == 0) {bottleneck_values_vector <- c(bottleneck_values_vector,i)}
+  
+  
+}
+
+LL_tibble <- tibble(bottleneck_size = bottleneck_values_vector, Log_Likelihood = 0*bottleneck_values_vector) 
 for(I in 1:nrow(LL_tibble) )
   {LL_tibble$Log_Likelihood[I] <- LL_func_approx( LL_tibble$bottleneck_size[I] ) }
 
@@ -76,26 +85,29 @@ for(I in 1:nrow(LL_tibble) )
 # Now we find the maximum likelihood estimate and the associated confidence interval
 Max_LL <- max(LL_tibble$Log_Likelihood) # Maximum value of log likelihood
 Max_LL_bottleneck_index <- which(LL_tibble$Log_Likelihood == max(LL_tibble$Log_Likelihood) ) # bottleneck size at which max likelihood occurs
-Max_LL_bottleneck <- Max_LL_bottleneck_index + Nb_min -1
+Max_LL_bottleneck <- bottleneck_values_vector[Max_LL_bottleneck_index] 
 likelihood_ratio <- qchisq(confidence_level, df=1) # necessary ratio of likelihoods set by confidence level
 ci_tibble <- filter(LL_tibble, 2*(Max_LL - Log_Likelihood) <= likelihood_ratio ) 
-lower_CI_bottleneck <- min(ci_tibble$bottleneck_size) # lower bound of confidence interval
-upper_CI_bottleneck <- max(ci_tibble$bottleneck_size) # upper bound of confidence interval
+lower_CI_bottleneck <- min(ci_tibble$bottleneck_size) -1 # lower bound of confidence interval
+upper_CI_bottleneck <- max(ci_tibble$bottleneck_size) +1# upper bound of confidence interval
+
 #if ci_tibble is empty
 if (length(ci_tibble$Log_Likelihood) == 0) {
   lower_CI_bottleneck <- min(Max_LL_bottleneck) 
   upper_CI_bottleneck <- max(Max_LL_bottleneck)
 }
-if(max(Max_LL_bottleneck) == Nb_max)
-{upper_CI_bottleneck <- Nb_max
-print("Peak bottleneck value for MLE is at Nb_max!  Try raising Nb_max for better bottleneck estimate")
+if(max(Max_LL_bottleneck) ==max(bottleneck_values_vector))
+{upper_CI_bottleneck <- max(bottleneck_values_vector)
+print("Peak bottleneck value for MLE is at Nb_max (or largest possible value given Nb_increment)!  Try raising Nb_max for better bottleneck estimate")
 }
-if(min(Max_LL_bottleneck) == Nb_min)
-{lower_CI_bottleneck <- Nb_min
-if(Nb_min > 1){print("Peak bottleneck value for MLE is at Nb_min!  Try lowering Nb_min for better bottleneck estimate")}
+if(min(Max_LL_bottleneck) == min(bottleneck_values_vector))
+{lower_CI_bottleneck <- min(bottleneck_values_vector)
+if(min(bottleneck_values_vector) > 1){print("Peak bottleneck value for MLE is at Nb_min (or smallest possible value given Nb_increment)!  Try lowering Nb_min for better bottleneck estimate")}
 }
+
 # now we plot our results
 if(plot_bool == TRUE){
+LL_tibble <- filter(LL_tibble, Log_Likelihood != -Inf)
 ggplot(data = LL_tibble) + geom_point(aes(x = bottleneck_size, y= Log_Likelihood )) + 
   geom_vline(xintercept= Max_LL_bottleneck )  + 
   geom_vline(xintercept= lower_CI_bottleneck, color = "green" ) +
