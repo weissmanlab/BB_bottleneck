@@ -83,7 +83,8 @@ for(I in 1:nrow(LL_tibble) )
 # Now we find the maximum likelihood estimate and the associated confidence interval
 
 Max_LL <- max(LL_tibble$Log_Likelihood) # Maximum value of log likelihood
-Max_LL_bottleneck <- which(LL_tibble$Log_Likelihood == max(LL_tibble$Log_Likelihood) ) # bottleneck size at which max likelihood occurs
+Max_LL_bottleneck_index <- which(LL_tibble$Log_Likelihood == max(LL_tibble$Log_Likelihood) ) # bottleneck size at which max likelihood occurs
+Max_LL_bottleneck <- Max_LL_bottleneck_index + Nb_min -1
 likelihood_ratio <- qchisq(confidence_level, df=1) # necessary ratio of likelihoods set by confidence level
 ci_tibble <- filter(LL_tibble, 2*(Max_LL - Log_Likelihood) <= likelihood_ratio ) 
 lower_CI_bottleneck <- min(ci_tibble$bottleneck_size) # lower bound of confidence interval
