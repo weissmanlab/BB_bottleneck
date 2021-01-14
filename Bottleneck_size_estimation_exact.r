@@ -89,6 +89,19 @@ likelihood_ratio <- qchisq(confidence_level, df=1) # necessary ratio of likeliho
 ci_tibble <- filter(LL_tibble, 2*(Max_LL - Log_Likelihood) <= likelihood_ratio ) 
 lower_CI_bottleneck <- min(ci_tibble$bottleneck_size) # lower bound of confidence interval
 upper_CI_bottleneck <- max(ci_tibble$bottleneck_size) # upper bound of confidence interval
+#if ci_tibble is empty
+if (length(ci_tibble$Log_Likelihood) == 0) {
+  lower_CI_bottleneck <- min(Max_LL_bottleneck) 
+  upper_CI_bottleneck <- max(Max_LL_bottleneck)
+}
+if(max(Max_LL_bottleneck) == Nb_max)
+{upper_CI_bottleneck <- Nb_max
+print("Peak bottleneck value for MLE is at Nb_max!  Try raising Nb_max for better bottleneck estimate")
+}
+if(min(Max_LL_bottleneck) == Nb_min)
+{lower_CI_bottleneck <- Nb_min
+if(Nb_min > 1){print("Peak bottleneck value for MLE is at Nb_min!  Try lowering Nb_min for better bottleneck estimate")}
+}
 
 # now we plot our results
 if(plot_bool == TRUE){
@@ -100,6 +113,7 @@ if(plot_bool == TRUE){
   ggsave("exact_plot.jpg")
 }
 print("Bottleneck size")
+if(length(Max_LL_bottleneck) > 1){print("MLE is degenerate.  The best bottleneck values are")}
 print(Max_LL_bottleneck)
 print("confidence interval left bound")
 print(lower_CI_bottleneck)
