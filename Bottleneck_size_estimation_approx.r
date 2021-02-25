@@ -35,6 +35,9 @@ confidence_level <- args$confidence_level # determines width of confidence inter
 donor_and_recip_freqs_observed <- read.table(args$file) # table of SNP frequencies in donor and recipient
 original_row_count <- nrow(donor_and_recip_freqs_observed)  # number of rows in raw table
 donor_and_recip_freqs_observed <- subset(donor_and_recip_freqs_observed, donor_and_recip_freqs_observed[, 1] >= var_calling_threshold)
+
+donor_and_recip_freqs_observed <- subset(donor_and_recip_freqs_observed, donor_and_recip_freqs_observed[, 1] <= (1-var_calling_threshold))
+
 new_row_count <- nrow(donor_and_recip_freqs_observed) # number of rows in filtered table
 
 if(new_row_count != original_row_count )
@@ -49,6 +52,11 @@ freqs_tibble <- tibble(donor_freqs = donor_and_recip_freqs_observed[, 1], recip_
 Log_Beta_Binom <- function(nu_donor, nu_recipient, NB_SIZE)  # This function gives Log Likelihood for every donor recipient SNP frequency pair
 { LL_val_above <- 0 # used for recipient frequencies above calling threshold
   LL_val_below <- 0 # used for recipient frequencies below calling threshold
+  
+  nu_donor <- if_else(nu_recipient <=1- var_calling_threshold , nu_donor,  1-nu_donor )
+  
+  nu_recipient <- if_else(nu_recipient <= 1-var_calling_threshold , nu_recipient,  1-nu_recipient )
+  
   for(k in 0:NB_SIZE){
     LL_val_above <-  LL_val_above +  dbeta(nu_recipient, k, (NB_SIZE - k) )*dbinom(k, size=NB_SIZE, prob= nu_donor)  
     LL_val_below <- LL_val_below +   pbeta(var_calling_threshold, k, (NB_SIZE - k))*dbinom(k,size=NB_SIZE, prob= nu_donor)
@@ -88,8 +96,8 @@ Max_LL_bottleneck_index <- which(LL_tibble$Log_Likelihood == max(LL_tibble$Log_L
 Max_LL_bottleneck <- bottleneck_values_vector[Max_LL_bottleneck_index] 
 likelihood_ratio <- qchisq(confidence_level, df=1) # necessary ratio of likelihoods set by confidence level
 ci_tibble <- filter(LL_tibble, 2*(Max_LL - Log_Likelihood) <= likelihood_ratio ) 
-lower_CI_bottleneck <- min(ci_tibble$bottleneck_size) -1 # lower bound of confidence interval
-upper_CI_bottleneck <- max(ci_tibble$bottleneck_size) +1# upper bound of confidence interval
+lower_CI_bottleneck <- min(ci_tibble$bottleneck_size) #-1 # lower bound of confidence interval
+upper_CI_bottleneck <- max(ci_tibble$bottleneck_size) #+1# upper bound of confidence interval
 
 #if ci_tibble is empty
 if (length(ci_tibble$Log_Likelihood) == 0) {
