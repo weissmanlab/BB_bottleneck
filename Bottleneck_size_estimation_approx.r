@@ -36,6 +36,9 @@ donor_and_recip_freqs_observed <- read.table(args$file) # table of SNP frequenci
 original_row_count <- nrow(donor_and_recip_freqs_observed)  # number of rows in raw table
 donor_and_recip_freqs_observed <- subset(donor_and_recip_freqs_observed, donor_and_recip_freqs_observed[, 1] >= var_calling_threshold)
 
+donor_and_recip_freqs_observed[,1] <- as.numeric(donor_and_recip_freqs_observed[,1])
+donor_and_recip_freqs_observed[,2] <- as.numeric(donor_and_recip_freqs_observed[,2])
+
 donor_and_recip_freqs_observed <- subset(donor_and_recip_freqs_observed, donor_and_recip_freqs_observed[, 1] <= (1-var_calling_threshold))
 
 new_row_count <- nrow(donor_and_recip_freqs_observed) # number of rows in filtered table

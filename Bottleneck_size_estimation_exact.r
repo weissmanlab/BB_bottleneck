@@ -30,6 +30,13 @@ Nb_max <- args$Nb_max      # Maximum bottlebeck size we consider
 Nb_increment <- args$Nb_increment
 confidence_level <- args$confidence_level  # determines width of confidence interval
 donor_freqs_recip_freqs_and_reads_observed <- read.table(args$file)  #table of SNP frequencies and reads in donor and recipient
+
+donor_freqs_recip_freqs_and_reads_observed[,1] = as.numeric(donor_freqs_recip_freqs_and_reads_observed[,1])
+donor_freqs_recip_freqs_and_reads_observed[,2] = as.numeric(donor_freqs_recip_freqs_and_reads_observed[,2])
+donor_freqs_recip_freqs_and_reads_observed[,3] = as.numeric(donor_freqs_recip_freqs_and_reads_observed[,3])
+donor_freqs_recip_freqs_and_reads_observed[,4] = as.numeric(donor_freqs_recip_freqs_and_reads_observed[,4])
+
+
 original_row_count <- nrow(donor_freqs_recip_freqs_and_reads_observed) # number of rows in raw table
 donor_freqs_recip_freqs_and_reads_observed <- subset(donor_freqs_recip_freqs_and_reads_observed, donor_freqs_recip_freqs_and_reads_observed[, 1] >= var_calling_threshold)
 
